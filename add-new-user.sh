@@ -1,21 +1,32 @@
 #!/bin/bash
 
 # Check for root priveleges
-if [[ $(/usr/bin/id -u) -ne 0 ]]
-then
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
   echo 'You must run this script with root priveleges'
   exit 1
 fi
 
-# Ask for username
-read -p 'Enter the username to create: ' USER_NAME
+# Usage message
+HOW_TO_USE='Usage: add-new-user.sh username accountholders name [...]'
 
-# Ask for name of new account holder
-read -p 'Enter name of new account holder: ' COMMENT
+# Check for correct no. of args
+if [[ "${#}" -lt 1 ]]; then
+  echo 'You must provide a Username'
+  echo ${HOW_TO_USE}
+  exit 1
+elif [[ "${#}" -lt 2 ]]; then
+  echo 'You must provide the account holders name'
+  echo ${HOW_TO_USE}
+  exit 1
+fi
 
-# Ask for password
-read -p 'Enter the password to be used for this account: ' PASSWORD
 
+# Assign username
+USER_NAME="${1}"
+
+# Comment for the name of the account holder
+shift
+COMMENT="${*}"
 # Create the user
 useradd -c "${COMMENT}" -m ${USER_NAME}
 
@@ -25,7 +36,8 @@ then
   exit 1
 fi
 
-# Set password for user
+# Set random password for user
+PASSWORD="$(echo ${RANDOM}$(date %s%N) | sha256sum | head -c 12)"
 echo ${PASSWORD} | passwd --stdin ${USER_NAME}
 
 if [[ ${?} -ne 0 ]]
